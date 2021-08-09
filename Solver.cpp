@@ -150,8 +150,7 @@ void Solver::filterHighEvaluation(unordered_map<Board, ResultType> &oMap, int co
 
 ResultType Solver::solve() {
     Board board;
-    auto r = greedyForScore(0, (int) brickSeq.size(), board);
-    return r;
+    return greedyForScore(0, (int) brickSeq.size(), board);
 }
 
 void Solver::setBrickSeq(const vector<Brick> &t) {
@@ -179,15 +178,12 @@ ResultType Solver::greedyForScore(int first, int last, Board &board) {
 
 void Solver::generateChoices(const Brick &brick, const unordered_map<Board, ResultType> &originMap,
                              unordered_map<Board, ResultType> &targetMap) {
-    unordered_map<Board, ResultType> tempMap;
-    tempMap.reserve(reservedBoardCount * 10);
-
     for (const auto &item:originMap) {
         TimerUtil::start("expand");
         expand(brick, item.first, item.second, targetMap);
         TimerUtil::finish("expand");
     }
-    cout << targetMap.size() << endl;
+    cout <<"set size: "<< targetMap.size() << endl;
     filterHighEvaluation(targetMap, reservedBoardCount);
 }
 
