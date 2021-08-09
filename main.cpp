@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     brickSeq.reserve(10000);
     for (int i = 0; i < brickSeq.capacity(); i++)
         brickSeq.emplace_back(brickGenerator.nextBrick());
-    brickSeq.erase(brickSeq.begin(), brickSeq.begin());
+
     Solver solver(1000, 1.0 / 38);
     solver.setBrickSeq(move(brickSeq));
     TimerUtil::start("ALL");
@@ -92,6 +92,7 @@ int main(int argc, char *argv[]) {
     res->s.pop_back();
     TimerUtil::finish("ALL");
     TimerUtil::printAllTime();
+
     cout << score << endl;
     ofstream out("answer.txt");
     out << "game.pause();game.playRecord('" << res->getContent() << "'.split(','));" << endl;
