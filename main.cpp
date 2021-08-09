@@ -84,8 +84,8 @@ int main(int argc, char *argv[]) {
     brickSeq.reserve(10000);
     for (int i = 0; i < brickSeq.capacity(); i++)
         brickSeq.emplace_back(brickGenerator.nextBrick());
-    brickSeq.erase(brickSeq.begin(),brickSeq.begin());
-    Solver solver(25000,1.0/38);
+    brickSeq.erase(brickSeq.begin(), brickSeq.begin());
+    Solver solver(1000, 1.0 / 38);
     solver.setBrickSeq(move(brickSeq));
     TimerUtil::start("ALL");
     auto[res, score]=solver.solve();
