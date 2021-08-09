@@ -60,15 +60,16 @@ int Board::getMaxHeight() const {
 int Board::getRowTransition() const {
     int rowTransition = 0;
     for (int i = 0; i < N; i++) {
-        bool lastGrid = true;
-        for (int j = 0; j < M; j++) {
-            if (query(i, j) != lastGrid) {
-                ++rowTransition;
-                lastGrid = !lastGrid;
-            }
-        }
-        if (!lastGrid)
-            ++rowTransition;
+//        bool lastGrid = true;
+//        for (int j = 0; j < M; j++) {
+//            if (query(i, j) != lastGrid) {
+//                ++rowTransition;
+//                lastGrid = !lastGrid;
+//            }
+//        }
+//        if (!lastGrid)
+//            ++rowTransition;
+        rowTransition += transition[rowAt(i)];
     }
     return rowTransition;
 }
