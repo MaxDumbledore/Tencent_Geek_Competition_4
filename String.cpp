@@ -4,6 +4,7 @@
 
 #include "String.h"
 #include <vector>
+#include <algorithm>
 
 string String::getContent() {
     StringPtr t = prev;

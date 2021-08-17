@@ -5,6 +5,8 @@
 #include "Board.h"
 #include <cstring>
 
+//如果是windows x64平台，使用_mm_popcnt系列，否则在GCC上使用 __builtin_popcount系列
+
 #ifndef _M_X64
 #define _mm_popcnt_u32 __builtin_popcount
 #define _mm_popcnt_u64 __builtin_popcountll
@@ -14,6 +16,42 @@
 #include "TimerUtil.h"
 
 #endif
+
+//预处理出一行的Transition数目，加快getRowTransition的效率
+
+constexpr int TransitionForSingleRow[1 << M] = {
+        2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6,
+        6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6,
+        8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4,
+        4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6,
+        6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6,
+        6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8, 8, 6, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4,
+        6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6,
+        4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6,
+        6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8, 8, 6, 6,
+        6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8, 8, 6,
+        8, 8, 10, 8, 10, 10, 10, 8, 8, 8, 10, 8, 8, 8, 8, 6, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8, 8, 6, 6, 6, 8,
+        6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6,
+        6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8,
+        8, 6, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8,
+        6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4,
+        4, 4, 6, 4, 4, 4, 4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4,
+        4, 4, 2, 4, 4, 6, 4, 6,
+        6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4,
+        4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4,
+        4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4,
+        4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6,
+        6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 8, 8, 10, 8, 8, 8, 8, 6, 6, 6, 8, 6,
+        8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6,
+        6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4,
+        4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6,
+        4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4,
+        6, 6, 8, 6, 6, 6, 6, 4, 6, 6, 8, 6, 8, 8, 8, 6, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6,
+        6, 6, 4, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4,
+        6, 4, 6, 6, 6, 4, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 6, 6, 8, 6, 6, 6, 6, 4, 4, 4, 6, 4, 6, 6, 6,
+        4, 4, 4, 6, 4, 4, 4, 4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 4, 4, 6, 4, 6, 6, 6, 4, 4, 4, 6, 4,
+        4, 4, 4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 4, 4, 6, 4, 4, 4, 4, 2, 2, 2, 4, 2, 4, 4, 4, 2, 2, 2, 4, 2, 2, 2, 2, 0
+};
 
 Board::Board() : state() {}
 
@@ -34,19 +72,22 @@ bool Board::operator<(const Board &t) const {
     return false;
 }
 
+//设置第x行第y列被占用
 void Board::set(int x, int y) {
     state[x / 5] |= (uint64_t) 1 << (y + x % 5 * M);
 }
 
-
+//查询第x行第y列值
 bool Board::query(int x, int y) const {
     return state[x / 5] >> (y + x % 5 * M) & 1;
 }
 
+//取出第index行
 uint32_t Board::rowAt(int index) const {
     return state[index / 5] >> (index % 5 * M) & FULL_ROW;
 }
 
+//返回最高的已有方格的高度
 int Board::getMaxHeight() const {
     uint32_t s = FULL_ROW;
     for (int i = N - 1; i >= 0; i--) {
@@ -57,6 +98,7 @@ int Board::getMaxHeight() const {
     return N;
 }
 
+//返回行方向上的变换次数，注释的内容TransitionForSingleRow等价
 int Board::getRowTransition() const {
     int rowTransition = 0;
     for (int i = 0; i < N; i++) {
@@ -69,11 +111,12 @@ int Board::getRowTransition() const {
 //        }
 //        if (!lastGrid)
 //            ++rowTransition;
-        rowTransition += transition[rowAt(i)];
+        rowTransition += TransitionForSingleRow[rowAt(i)];
     }
     return rowTransition;
 }
 
+//返回列方向上的变换次数
 int Board::getColumnTransition() const {
     int columnTransition = 0;
     uint32_t curRow, nextRow = rowAt(0);
@@ -85,6 +128,7 @@ int Board::getColumnTransition() const {
     return columnTransition;
 }
 
+//返回洞的个数
 int Board::getNumberOfHoles() const {
     uint32_t holes = 0;
     int numberOfHoles = 0;
@@ -96,7 +140,9 @@ int Board::getNumberOfHoles() const {
     return numberOfHoles;
 }
 
+//返回井的深度和
 int Board::getWellSums() const {
+    //t记录某一列的上方有多少个井，列j处新出现一个空格那么给深度和的贡献量就是t[j]
     int t[M] = {}, wellSums = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++)
@@ -111,6 +157,7 @@ int Board::getWellSums() const {
     return wellSums;
 }
 
+//删除所有的满列
 int Board::removeFullRow() {
     //TimerUtil::start(__func__ );
     int pos = N;
@@ -126,6 +173,7 @@ int Board::removeFullRow() {
     return pos;
 }
 
+//设置index列为整数val
 void Board::setRow(int index, uint32_t val) {
     int t = index % 5 * M;
     uint64_t mask = ~((uint64_t) FULL_ROW << t);
@@ -133,6 +181,7 @@ void Board::setRow(int index, uint32_t val) {
     state[index / 5] |= (uint64_t) val << t;
 }
 
+//获得已有格子数
 int Board::getCount() const {
     int count = 0;
     for (auto &i:state)
@@ -140,6 +189,7 @@ int Board::getCount() const {
     return count;
 }
 
+//打印
 void Board::print() const {
     for (int i = 0; i < N; i++)
         for (int j = 0; j < M; j++) {
@@ -148,6 +198,14 @@ void Board::print() const {
         }
     putchar('\n');
     fflush(stdout);
+}
+
+//从vector<vector<int>>加载Board
+Board::Board(const vector<vector<int>> &b) : state() {
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
+            if (b[i][j])
+                set(i, j);
 }
 
 

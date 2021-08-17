@@ -9,10 +9,13 @@
 
 using namespace std;
 
+//一个块记录了种类和朝向，可以在BrickShape中索引得到四个格子的坐标
+
 struct Brick {
     int index, orientation;
 };
 
+//记录所有块的形状和不同朝向，注意坐标是从行0开始上至下，列从0开始左至右
 inline const vector<vector<pair<int, int>>> BrickShape[7] = {
         {{{-2, 0},  {-1, 0}, {0, 0},  {1, 0}},
                 {{0,  -1}, {0, 0},  {0, 1}, {0, 2}}},

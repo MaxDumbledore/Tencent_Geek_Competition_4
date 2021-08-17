@@ -14,6 +14,7 @@ using namespace std;
 Solver::Solver(int reservedBoardCount, double scoreWeight) : reservedBoardCount(reservedBoardCount),
                                                              scoreWeight(scoreWeight) {}
 
+//求出brick在pos处下降降落的高度
 int Solver::getFallingHeight(const Brick &brick, int pos, const Board &board) {
     for (int i = 0; i < N; i++) {
         for (auto j:BrickShape[brick.index][brick.orientation]) {
@@ -48,14 +49,14 @@ void Solver::expand(Brick brick, const Board &board, const ResultType &res, unor
             break;
 //        if (initFallingHeight <= 0)
 //            break;
-        for (int i = 4; i >= -l; i--) {
+        for (int i = 4; i >= -l; i--) { //朝左侧移动
             auto fallingHeight = getFallingHeight(brick, i, board);
-            if (fallingHeight + u < 0)
+            if (fallingHeight + u < 0)  //触顶，不再继续移动
                 break;
             if (fallingHeight + u > 0)
                 insertNewBoardAfterFall(brick, board, res, target, count, o, i, fallingHeight);
         }
-        for (int i = 5; i + r < M; i++) {
+        for (int i = 5; i + r < M; i++) {   //朝右侧移动
             auto fallingHeight = getFallingHeight(brick, i, board);
             if (fallingHeight + u < 0)
                 break;
@@ -66,6 +67,7 @@ void Solver::expand(Brick brick, const Board &board, const ResultType &res, unor
     }
 }
 
+//求出结果局面以及步骤、分数
 void Solver::insertNewBoardAfterFall(const Brick &brick, const Board &board, const ResultType &res,
                                      unordered_map<Board, ResultType> &target, int count, int o, int pos,
                                      int fallingHeight) {
@@ -73,6 +75,7 @@ void Solver::insertNewBoardAfterFall(const Brick &brick, const Board &board, con
     ResultType nRes = {make_shared<String>(), res.score};
     putNewBrick(brick, pos, fallingHeight, nBoard);
     int removed = nBoard.removeFullRow();
+
     nRes.score += removed * (removed + 1) / 2 * count;
     nRes.steps->s += "N,";
     if (o > 0)
@@ -87,35 +90,6 @@ void Solver::insertNewBoardAfterFall(const Brick &brick, const Board &board, con
     if (temp.steps == nullptr || temp.score < nRes.score)
         temp = move(nRes);
 }
-
-//void Solver::filterHighEvaluation(unordered_map<Board, ResultType> &oMap, int count) {
-//    if (count >= oMap.size())
-//        return;
-//    int norm = 0;
-//
-//    priority_queue<pair<double, decltype(&*oMap.begin())>> Q;
-//    for (auto &it:oMap) {
-//        //auto evaluation = BoardEvaluator::evaluate(it.first);
-//        auto evaluation =
-//                BoardEvaluator::evaluate(it.first) -
-//                it.second.score / 30.0;
-//        /*(double) it.second.score / norm * 125;*/
-//        //(it.first.getCount() > 50 && norm ? (double) it.second.score / norm * 125 : 0);
-//        if (Q.size() < count || Q.size() == count && evaluation < Q.top().first) {
-//            Q.emplace(evaluation, &it);
-//            if (Q.size() > count)
-//                Q.pop();
-//        }
-//    }
-//    unordered_map<Board, ResultType> nMap;
-//    nMap.reserve(Q.size());
-//    while (!Q.empty()) {
-//        nMap.emplace(*Q.top().second);
-//        //Q.top().second->first.print(), fflush(stdout);
-//        Q.pop();
-//    }
-//    oMap = move(nMap);
-//}
 
 void Solver::filterHighEvaluation(unordered_map<Board, ResultType> &oMap, int count) const {
     if (count >= oMap.size())
@@ -132,7 +106,7 @@ void Solver::filterHighEvaluation(unordered_map<Board, ResultType> &oMap, int co
     priority_queue<item> Q;
     for (auto it = oMap.cbegin(); it != oMap.cend(); it++) {
         auto evaluation =
-                BoardEvaluator::evaluate(it->first) - it->second.score * scoreWeight;
+                BoardEvaluator::evaluate(it->first) - it->second.score * scoreWeight;   //估价函数
         if (Q.size() < count || Q.size() == count && evaluation < Q.top().v) {
             Q.emplace(item{evaluation, it});
             if (Q.size() > count)
@@ -148,8 +122,7 @@ void Solver::filterHighEvaluation(unordered_map<Board, ResultType> &oMap, int co
     oMap = move(nMap);
 }
 
-ResultType Solver::solve() {
-    Board board;
+ResultType Solver::solve(Board &board) {
     return greedyForScore(0, (int) brickSeq.size(), board);
 }
 
@@ -163,28 +136,26 @@ void Solver::setBrickSeq(vector<Brick> &&t) {
 
 ResultType Solver::greedyForScore(int first, int last, Board &board) {
     unordered_map<Board, ResultType> boardMap, tempMap;
-    boardMap[board];
+    boardMap[board];    //插入初始状态
     for (int i = first; i < last; i++) {
-        generateChoices(brickSeq[i], boardMap, tempMap);
+        generateChoices(brickSeq[i], boardMap, tempMap);    //生成新局面集合保存至tempMap
         boardMap.clear();
-        tempMap.swap(boardMap);
+        tempMap.swap(boardMap); //得到新的boardMap，清空tempMap
     }
     ResultType t{StringPtr(), -1};
     for (auto &item:boardMap)
         if (item.second.score > t.score)
-            t = item.second, board = item.first;
+            t = item.second, board = item.first;    //找到分数最高的最终状态
     return t;
 }
 
 void Solver::generateChoices(const Brick &brick, const unordered_map<Board, ResultType> &originMap,
                              unordered_map<Board, ResultType> &targetMap) {
     for (const auto &item:originMap) {
-        TimerUtil::start("expand");
-        expand(brick, item.first, item.second, targetMap);
-        TimerUtil::finish("expand");
+        //TimerUtil::start("expand");
+        expand(brick, item.first, item.second, targetMap);  //扩张
+        //TimerUtil::finish("expand");
     }
     cout <<"set size: "<< targetMap.size() << endl;
-    filterHighEvaluation(targetMap, reservedBoardCount);
+    filterHighEvaluation(targetMap, reservedBoardCount);    //筛选出reservedBoardCount个数的状态
 }
-
-

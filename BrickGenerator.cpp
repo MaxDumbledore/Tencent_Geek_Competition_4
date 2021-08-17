@@ -4,6 +4,7 @@
 
 #include "BrickGenerator.h"
 
+//返回下一个块
 Brick BrickGenerator::nextBrick() {
     iterate();
     int index = getShapeIndex();

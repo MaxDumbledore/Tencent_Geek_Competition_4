@@ -5,18 +5,6 @@
 #include "TimerUtil.h"
 #include <iostream>
 
-//void TimerUtil::start() {
-//    sta = clock();
-//}
-//
-//void TimerUtil::finish() {
-//    t += (double) (clock() - sta) / CLOCKS_PER_SEC;
-//}
-//
-//double TimerUtil::getElapsedTime() {
-//    return t;
-//}
-
 void TimerUtil::start(string_view name) {
     timer[name].first = clock();
 }

@@ -23,7 +23,7 @@ class Solver {
 public:
     Solver(int reservedBoardCount, double scoreWeight);
 
-    ResultType solve();
+    ResultType solve(Board &board);
 
     void setBrickSeq(const vector<Brick> &t);
 

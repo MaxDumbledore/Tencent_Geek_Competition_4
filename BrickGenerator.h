@@ -7,6 +7,8 @@
 
 #include "Brick.h"
 
+//按照core.js中的方式来生成块序列
+
 class BrickGenerator {
 public:
     BrickGenerator();

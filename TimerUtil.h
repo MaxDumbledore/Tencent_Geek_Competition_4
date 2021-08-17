@@ -11,6 +11,10 @@
 
 using namespace std;
 
+/**
+ * 一个比较粗略的计时器，注意其中map的耗时对准确性的影响
+ */
+
 //Caution! Don't take string object as parameter! only literal string is recommended!
 
 class TimerUtil {
